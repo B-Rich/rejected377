@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 
-"""Implementation of with block context managers that allow clearly defined skipping of the controlled block ala PEP 377
+"""Implementation of with block context managers that allow
+clearly defined skipping of the controlled block ala PEP 377
 
-PEP 377 (rejected) proposed making this a standard language feature, and was rejected primarily because it alters the logical control flow of the with block.
-This implementation uses the fact that variable assignments in the with ... as ...: syntax are considered part of the with block
-Exceptions raised in these assignments are passed to the __exit__ function of the context manager, and can be used to skip the block.
+PEP 377 (rejected) proposed making this a standard language feature,
+and was rejected primarily because it alters the logical control flow
+of the with block.
+
+This implementation uses the fact that variable assignments in the
+with ... as ...: syntax are considered part of the with block
+Exceptions raised in these assignments are passed to the __exit__
+function of the context manager, and can be used to skip the block.
 """
 
 import threading
@@ -14,33 +20,46 @@ import sys
 import warnings
 from . import Singleton
 
+
 class SkipStatement(Exception):
-    """Exception which when raised by a conditional context manager function will cause the controlled statement to be skipped"""
+    """Exception which when raised by a conditional context manager function
+    will cause the controlled statement to be skipped"""
+
 
 class StatementNotSkippedType:
-    """A singleton object indicating that a context manager for a with clause has not directed the controlled statement to be skipped"""
+    """A singleton object indicating that a context manager for a with clause
+    has *not* directed the controlled statement to be skipped"""
     __metaclass__ = Singleton.Singleton
     name = "StatementNotSkipped"
 
+
 class StatementSkippedType:
-    """A singleton object indicating that a context manager for a with clause has directed the controlled statement to be skipped - also contains the .detector attribute"""
+    """A singleton object indicating that a context manager for a with clause
+     *has* directed the controlled statement to be skipped
+     Also contains the .detector attribute"""
     __metaclass__ = Singleton.Singleton
     name = "StatementSkipped"
+
     def __setattr__(self, attr, value):
         """Only the detector attribute may be set on StatementSkipped"""
         if attr != "detector":
-            raise AttributeError("%r object has no attribute %r" % (type(self), attr))
+            raise AttributeError("%r object has no attribute %r" %
+                    (type(self), attr))
         object.__setattr__(self, attr, value)
 
     @property
     def detector(self):
-        """Attribute which when set triggers the skipping of controlled statements by conditional context managers"""
-        raise AttributeError("%r.detector is a write-only attribute" % type(self))
+        """Attribute which when set triggers the skipping of
+        controlled statements by conditional context managers"""
+        raise AttributeError("%r.detector is a write-only attribute" %
+                type(self))
 
     @detector.setter
     def detector(self, value):
-        """Sets the detector attribute, triggering a SkipStatement exception if the value is StatementSkipped"""
-        if isinstance(value, tuple) and len(value) == 2 and value[1] in (StatementSkipped, StatementNotSkipped):
+        """Sets the detector attribute, triggering a SkipStatement exception
+        if the value is StatementSkipped"""
+        if isinstance(value, tuple) and len(value) == 2 and \
+                value[1] in (StatementSkipped, StatementNotSkipped):
             value = value[1]
         if value is StatementSkipped:
             raise SkipStatement()
