@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """Implementation of with block context managers that allow
 clearly defined skipping of the controlled block ala PEP 377
@@ -13,7 +14,7 @@ Exceptions raised in these assignments are passed to the __exit__
 function of the context manager, and can be used to skip the block.
 """
 
-from WithContextSkip import SkipStatement, \
-        StatementSkipped, StatementNotSkipped, \
-        ConditionalContextManager, conditionalcontextmanager
+from WithContextSkip import SkipStatement, StatementSkipped, \
+    StatementNotSkipped, ConditionalContextManager, \
+    conditionalcontextmanager
 from ThreadWeave import only_thread, only_thread_blocking

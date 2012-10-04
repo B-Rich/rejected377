@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """Implementation of with block context managers that allow
 clearly defined skipping of the controlled block ala PEP 377
@@ -29,42 +30,49 @@ class SkipStatement(Exception):
 class StatementNotSkippedType:
     """A singleton object indicating that a context manager for a with clause
     has *not* directed the controlled statement to be skipped"""
+
     __metaclass__ = Singleton.Singleton
-    name = "StatementNotSkipped"
+    name = 'StatementNotSkipped'
 
 
 class StatementSkippedType:
     """A singleton object indicating that a context manager for a with clause
      *has* directed the controlled statement to be skipped
      Also contains the .detector attribute"""
+
     __metaclass__ = Singleton.Singleton
-    name = "StatementSkipped"
+    name = 'StatementSkipped'
 
     def __setattr__(self, attr, value):
         """Only the detector attribute may be set on StatementSkipped"""
-        if attr != "detector":
-            raise AttributeError("%r object has no attribute %r" %
-                    (type(self), attr))
+
+        if attr != 'detector':
+            raise AttributeError('%r object has no attribute %r'
+                                 % (type(self), attr))
         object.__setattr__(self, attr, value)
 
     @property
     def detector(self):
         """Attribute which when set triggers the skipping of
         controlled statements by conditional context managers"""
-        raise AttributeError("%r.detector is a write-only attribute" %
-                type(self))
+
+        raise AttributeError('%r.detector is a write-only attribute'
+                             % type(self))
 
     @detector.setter
     def detector(self, value):
         """Sets the detector attribute, triggering a SkipStatement exception
         if the value is StatementSkipped"""
-        if isinstance(value, tuple) and len(value) == 2 and \
-                value[1] in (StatementSkipped, StatementNotSkipped):
+
+        if isinstance(value, tuple) and len(value) == 2 and value[1] \
+            in (StatementSkipped, StatementNotSkipped):
             value = value[1]
         if value is StatementSkipped:
             raise SkipStatement()
         elif value is not StatementNotSkipped:
-            warnings.warn("%s.detector received an unexpected skip indicator" % self.name, SkipWarning, stacklevel=3)
+            warnings.warn('%s.detector received an unexpected skip indicator'
+                           % self.name, SkipWarning, stacklevel=3)
+
 
 StatementSkipped = StatementSkippedType()
 StatementNotSkipped = StatementNotSkippedType()
@@ -72,24 +80,35 @@ StatementNotSkipped = StatementNotSkippedType()
 del StatementSkippedType
 del StatementNotSkippedType
 
+
 class SkipWarning(Warning):
-    """Warning related to with context managers with conditional block skipping"""
+    """Warning related to conditional context managers"""
+
 
 class ConditionalContextManager(object):
     """Helper for @conditionalcontextmanager decorator."""
+
     def __init__(self, gen):
         self.gen = gen
 
     def __enter__(self):
         try:
-            return self.gen.next(), StatementNotSkipped
+            return (self.gen.next(), StatementNotSkipped)
         except SkipStatement, e:
-            # set flag
-            return StatementSkipped, StatementSkipped
-        except StopIteration, e:
-            raise RuntimeError("generator didn't yield or raise SkipStatement")
 
-    def __exit__(self, type, value, traceback):
+            # set flag
+
+            return (StatementSkipped, StatementSkipped)
+        except StopIteration, e:
+            raise RuntimeError("generator didn't yield or raise SkipStatement"
+                               )
+
+    def __exit__(
+        self,
+        type,
+        value,
+        traceback,
+        ):
         if type is None:
             try:
                 self.gen.next()
@@ -99,20 +118,26 @@ class ConditionalContextManager(object):
                 raise RuntimeError("generator didn't stop")
         else:
             if value is None:
+
                 # Need to force instantiation so we can reliably
                 # tell if we get the same exception back
+
                 value = type()
             if isinstance(value, SkipStatement):
                 return True
             try:
                 self.gen.throw(type, value, traceback)
-                raise RuntimeError("generator didn't stop after throw()")
+                raise RuntimeError("generator didn't stop after throw()"
+                                   )
             except StopIteration, exc:
+
                 # Suppress the exception *unless* it's the same exception that
                 # was passed to throw().  This prevents a StopIteration
                 # raised inside the "with" statement from being suppressed
+
                 return exc is not value
             except:
+
                 # only re-raise if it's *not* the exception that was
                 # passed to throw(), because __exit__() must not raise
                 # an exception unless __exit__() itself failed.  But throw()
@@ -120,6 +145,7 @@ class ConditionalContextManager(object):
                 # fixes the impedance mismatch between the throw() protocol
                 # and the __exit__() protocol.
                 #
+
                 if sys.exc_info()[1] is not value:
                     raise
 
@@ -156,8 +182,8 @@ def conditionalcontextmanager(func):
             <cleanup>
 
     """
+
     @wraps(func)
     def helper(*args, **kwds):
         return ConditionalContextManager(func(*args, **kwds))
     return helper
-

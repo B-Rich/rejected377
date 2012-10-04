@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 """Unit tests for contextlib.py, adapted with WithContextSkip."""
 
 import sys
@@ -15,6 +18,7 @@ class ConditionalContextManagerTestCase(unittest.TestCase):
 
     def test_contextmanager_plain(self):
         state = []
+
         @conditionalcontextmanager
         def woohoo():
             state.append(1)
@@ -28,6 +32,7 @@ class ConditionalContextManagerTestCase(unittest.TestCase):
 
     def test_contextmanager_finally(self):
         state = []
+
         @conditionalcontextmanager
         def woohoo():
             state.append(1)
@@ -44,29 +49,34 @@ class ConditionalContextManagerTestCase(unittest.TestCase):
         self.assertEqual(state, [1, 42, 999])
 
     def test_contextmanager_no_reraise(self):
+
         @conditionalcontextmanager
         def whee():
-            yield
+            yield None
         ctx = whee()
         ctx.__enter__()
+
         # Calling __exit__ should not result in an exception
-        self.assertFalse(ctx.__exit__(TypeError, TypeError("foo"), None))
+
+        self.assertFalse(ctx.__exit__(TypeError, TypeError('foo'),
+                         None))
 
     def test_contextmanager_trap_yield_after_throw(self):
+
         @conditionalcontextmanager
         def whoo():
             try:
-                yield
+                yield None
             except:
-                yield
+                yield None
         ctx = whoo()
         ctx.__enter__()
-        self.assertRaises(
-            RuntimeError, ctx.__exit__, TypeError, TypeError("foo"), None
-        )
+        self.assertRaises(RuntimeError, ctx.__exit__, TypeError,
+                          TypeError('foo'), None)
 
     def test_contextmanager_except(self):
         state = []
+
         @conditionalcontextmanager
         def woohoo():
             state.append(1)
@@ -83,32 +93,40 @@ class ConditionalContextManagerTestCase(unittest.TestCase):
         self.assertEqual(state, [1, 42, 999])
 
     def _create_contextmanager_attribs(self):
+
         def attribs(**kw):
+
             def decorate(func):
-                for k,v in kw.items():
-                    setattr(func,k,v)
+                for (k, v) in kw.items():
+                    setattr(func, k, v)
                 return func
+
             return decorate
+
         @conditionalcontextmanager
         @attribs(foo='bar')
         def baz(spam):
             """Whee!"""
+
         return baz
 
     def test_contextmanager_attribs(self):
         baz = self._create_contextmanager_attribs()
-        self.assertEqual(baz.__name__,'baz')
+        self.assertEqual(baz.__name__, 'baz')
         self.assertEqual(baz.foo, 'bar')
 
     @unittest.skipIf(sys.flags.optimize >= 2,
-                     "Docstrings are omitted with -O2 and above")
+                     'Docstrings are omitted with -O2 and above')
     def test_contextmanager_doc_attrib(self):
         baz = self._create_contextmanager_attribs()
-        self.assertEqual(baz.__doc__, "Whee!")
+        self.assertEqual(baz.__doc__, """Whee!""")
+
 
 # This is needed to make the test actually run under regrtest.py!
+
 def test_main():
     test_support.run_unittest(__name__)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     test_main()

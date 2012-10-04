@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """Tests the Singleton implementation"""
 
@@ -10,8 +11,11 @@ import types
 def test_basic():
     """Most basic singleton definition works and
     constructing always produces the same result"""
+
     class Highlander(object):
+
         __metaclass__ = Singleton.Singleton
+
     assert issubclass(Highlander, object)
     highlander = Highlander()
     assert isinstance(highlander, Highlander)
@@ -21,8 +25,11 @@ def test_basic():
 
 def test_non_oldstyle():
     """Tests that Singleton classes are implictly newstyle"""
+
     class Highlander:
+
         __metaclass__ = Singleton.Singleton
+
     assert isinstance(Highlander, object)
     assert not isinstance(Highlander, types.ClassType)
     highlander = Highlander()
@@ -33,10 +40,13 @@ def test_non_oldstyle():
 
 def test_subclass():
     """Subclasses are distinct singletons"""
+
     class Highlander(object):
+
         __metaclass__ = Singleton.Singleton
 
     class VeryHighlander(Highlander):
+
         pass
 
     assert issubclass(VeryHighlander, Highlander)
@@ -51,7 +61,9 @@ def test_subclass():
 
 def test_deletion():
     """Deletion and garbage collection don't destroy the singleton"""
+
     class Highlander(object):
+
         __metaclass__ = Singleton.Singleton
 
     assert issubclass(Highlander, object)
@@ -69,15 +81,17 @@ def test_deletion():
 def test_args_irrelevant():
     """Arguments passed to the constructor don't have any effect
     after the initial construction"""
+
     class Highlander(object):
+
         __metaclass__ = Singleton.Singleton
 
         def __init__(self, clan):
             self.clan = clan
 
     assert issubclass(Highlander, object)
-    highlander = Highlander("McDonald")
+    highlander = Highlander('McDonald')
     assert isinstance(highlander, Highlander)
-    highlander2 = Highlander("BurgerKing")
-    assert highlander2.clan == "McDonald"
+    highlander2 = Highlander('BurgerKing')
+    assert highlander2.clan == 'McDonald'
     assert highlander2 is highlander
